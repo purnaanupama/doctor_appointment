@@ -36,6 +36,7 @@ sequelize
 
 //Mount routes
 app.use('/medicare/user', require('./routes/user_route.js'));
+console.log("SDF");
 
 
 //Start server
