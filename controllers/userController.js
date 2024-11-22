@@ -1,9 +1,16 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { validationResult } from 'express-validator';
 
 //User register
 export const registerUser = async (req, res, next) => {
+  //Check is any validation error are there
+  const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { username, email, password, mobileNumber, role } = req.body;
   
     try {
@@ -54,6 +61,12 @@ export const registerUser = async (req, res, next) => {
 
   //User Login
   export const loginUser = async (req, res, next) => {
+    //Check is any validation error are there
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { email, password } = req.body;
   
     try {
