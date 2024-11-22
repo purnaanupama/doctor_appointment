@@ -1,11 +1,10 @@
-const { Sequelize } = require('sequelize');
+import { Sequelize } from "sequelize";
 
 // Create a Sequelize instance
-const sequelize = new Sequelize('medicare', 'medicare', 'pass', {
+const sequelize = new Sequelize('medicare', 'medicareUser', 'pass', {
   host: 'localhost',
   dialect: 'mysql', // Change to 'postgres', 'sqlite', 'mariadb', or 'mssql' if needed
   logging: false,   // Disable logging in the console
 });
 
-module.exports = sequelize;
-
+export default sequelize; 
