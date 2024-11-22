@@ -14,19 +14,24 @@ const Appointment = sequelize.define('Appointment', {
     appointmentTime: {
       type: DataTypes.TIME,
       allowNull: false,
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
     },
     status: {
-    type: DataTypes.ENUM('pending', 'accepted', 'cancelled'), // Use ENUM for specific values
-    allowNull: false,
-    defaultValue: 'pending', // Set default status
+      type: DataTypes.ENUM('pending', 'accepted', 'cancelled'), // Use ENUM for specific values
+      allowNull: false,
+      defaultValue: 'pending', // Set default status
     },
     doctorName: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+     //References for a users table
+     patientId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: User,
+        key: 'id'
+      }
     }
   }, {
     underscored: true,
