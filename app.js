@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import sequelize from './config/dbConfig.js';
+import userRouter from './routes/userRoutes.js';
 dotenv.config();
 
 const app = express(); //create express app
@@ -31,7 +32,7 @@ sequelize
   });
 
 //Mount routes
-// app.use('/medicare/user', require('./routes/userRoutes.js'));
+app.use('/api/medicare/user', userRouter);
 
 
 //Start server
