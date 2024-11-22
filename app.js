@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import sequelize from './config/dbConfig.js';
 import userRouter from './routes/userRoutes.js';
+import appointmentRouter from './routes/appointmentRoutes.js'
+
 dotenv.config();
 
 const app = express(); //create express app
@@ -23,7 +25,7 @@ sequelize
 
 // Sync database
 sequelize
-  .sync()
+  .sync({ alter: true })
   .then(() => {
     console.log('Database synced');
   })
@@ -33,10 +35,10 @@ sequelize
 
 //Mount routes
 app.use('/api/medicare/user', userRouter);
-
+app.use('/api/medicare/appointment',appointmentRouter);
 
 //Start server
 const PORT = process.env.PORT || 3000
 app.listen(PORT,()=>{
     console.log(`Server running on port ${PORT}`);
-})
+});
