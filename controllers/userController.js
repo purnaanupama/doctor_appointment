@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 //User register
+//user new reducer
 export const registerUser = async (req, res, next) => {
     const { username, email, password, mobileNumber, role } = req.body;
   
