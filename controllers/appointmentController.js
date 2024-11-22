@@ -1,4 +1,6 @@
-import Appointment from "../models/Appointment.js";
+
+import {User} from "../models/Index.js";
+import {Appointment} from "../models/Index.js";
 
 
 export const addAppointment=async(req,res,next)=>{
@@ -77,5 +79,70 @@ export const updateAppointment = async (req, res, next) => {
       });
     }
   };
+
+  export const fetchAppointments = async (req, res, next) => {
+    try {
+      const appointments = await Appointment.findAll({
+        include: [
+          {
+            model: User,
+            attributes: ['username'], // Include only the username
+          },
+        ],
+      });
+  
+      return res.status(200).json({
+        status: true,
+        message: 'Appointments fetched successfully',
+        data: appointments,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        status: false,
+        message: 'Something went wrong',
+        error: error.message,
+      });
+    }
+  }
+  
+  
+
+  export const deleteAppointments = async (req, res, next) => {
+      const { id } = req.params; // Extract the appointment ID from request parameters
+  
+      try {
+          // Find the appointment by ID
+          const appointment = await Appointment.findByPk(id);
+  
+          // If appointment does not exist, return a 404 error
+          if (!appointment) {
+              return res.status(404).json({
+                  status: false,
+                  message: 'Appointment not found',
+              });
+          }
+  
+          // Delete the appointment
+          await appointment.destroy();
+  
+          // Respond with success message
+          return res.status(200).json({
+              status: true,
+              message: 'Appointment deleted successfully',
+          });
+      } catch (error) {
+          // Handle errors
+          return res.status(500).json({
+              status: false,
+              message: 'Something went wrong',
+              error: error.message,
+          });
+      }
+  };
+
+
+
+
+  
   
   

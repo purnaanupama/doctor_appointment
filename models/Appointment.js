@@ -1,9 +1,9 @@
 import { DataTypes } from "sequelize";
-import sequelize from '../config/dbConfig.js';
-import User from "./User.js";
+import sequelize from "../config/dbConfig.js";
 
-// Define Appointment model
-const Appointment = sequelize.define('Appointment', {
+const Appointment = sequelize.define(
+  "Appointment",
+  {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -18,28 +18,28 @@ const Appointment = sequelize.define('Appointment', {
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM('pending', 'accepted', 'cancelled'),
-      defaultValue: 'pending',
+      type: DataTypes.ENUM("pending", "accepted", "cancelled"),
+      defaultValue: "pending",
     },
     doctorName: {
       type: DataTypes.STRING,
-      allowNull: true,  // Optionally set this as nullable, in case it can be empty
+      allowNull: true,
     },
     patientId: {
       type: DataTypes.INTEGER,
-      references: {
-        model: User,
-        key: 'id'
-      },
-      allowNull: false,  // Ensure that the foreign key cannot be null
-      onDelete: 'CASCADE', // Automatically delete appointments if the user is deleted
-      onUpdate: 'CASCADE', // If the user ID changes, update the foreign key
-    }
-}, {
+      allowNull: false, // Foreign key for User model
+    },
+  },
+  {
     underscored: true,
-    tableName: 'appointments', // Ensure it matches your database table name
-    timestamps: true,  // Sequelize will handle createdAt and updatedAt automatically
-});
+    tableName: "appointments",
+    timestamps: true,
+  }
+);
 
-// Export the model
+// Association function to be called later
+Appointment.associate = (models) => {
+  Appointment.belongsTo(models.User, { foreignKey: "patientId" });
+};
+
 export default Appointment;
