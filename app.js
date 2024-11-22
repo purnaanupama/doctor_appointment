@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import sequelize from './config/dbConfig.js';
 import userRouter from './routes/userRoutes.js';
 import appointmentRouter from './routes/appointmentRoutes.js'
+import { errorHandler } from './middleware/errorHanlder.js';
 
 dotenv.config();
 
@@ -36,6 +37,9 @@ sequelize
 //Mount routes
 app.use('/api/medicare/user', userRouter);
 app.use('/api/medicare/appointment',appointmentRouter);
+
+//Error handler middleware
+app.use(errorHandler);
 
 //Start server
 const PORT = process.env.PORT || 3000

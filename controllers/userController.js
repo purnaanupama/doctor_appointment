@@ -1,15 +1,23 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { validationResult } from 'express-validator';
 
 //User register
 //user new reducer
 export const registerUser = async (req, res, next) => {
+  //Check is any validation error are there
+  const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { username, email, password, mobileNumber, role } = req.body;
   
     try {
       //Check any user already registered using same email
-      let user = await User.findOne({ where: { email } });
+      let user = await User.findOne({ 
+        where: { email }});
       if (user) {
         return res.status(400).json({
             status: false,
@@ -55,11 +63,20 @@ export const registerUser = async (req, res, next) => {
 
   //User Login
   export const loginUser = async (req, res, next) => {
+    //Check is any validation error are there
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { email, password } = req.body;
   
     try {
       // Check email as user credentials
-      const user = await User.findOne({where: { email }});
+      const user = await User.findOne({
+        where: { email },
+        attributes: ['email', 'password']
+      });
 
       if(!user){
         return res.status(400).json({
@@ -94,12 +111,24 @@ export const registerUser = async (req, res, next) => {
         message: 'User is logged in successfully',
       });
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        status: false,
-        error: error.message,
-        message: 'Server error',
-      });
+      next(error);
     }
   };
   
+  //User logout functionality
+export const logout = async (req, res, next) => {
+  try {
+    // Clear the token cookie by setting it with an immediate expiration
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: true
+    });
+
+    return res.status(200).json({
+      success: 'success',
+      message: 'Logged out successfully.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
