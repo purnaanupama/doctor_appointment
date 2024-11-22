@@ -1,5 +1,5 @@
-import Appointment from "../models/Appointment.js";
-import User from "../models/User.js";
+import {User} from "../models/Index.js";
+import {Appointment} from "../models/Index.js";
 
 
 export const addAppointment=async(req,res,next)=>{
@@ -16,7 +16,6 @@ export const addAppointment=async(req,res,next)=>{
          const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
          const day = String(now.getDate()).padStart(2, '0');
          const formattedDate = `${year}-${month}-${day}`;
-         console.log(formattedDate);  // Correct output: "2024-11-22"
     try {
       //Check if the valid user is making adding the appointment
       //Check if user exist
@@ -40,9 +39,8 @@ export const addAppointment=async(req,res,next)=>{
 }
 
 export const updateAppointment = async (req, res, next) => {
-    const { id, status } = req.body;
-    console.log(`Updating appointment with id: ${id} and status: ${status}`);
-    
+    const { id } = req.params;
+    const { status } = req.body;    
     try {
       // Step 1: Find the appointment by ID
       const appointment = await Appointment.findByPk(id);
@@ -64,10 +62,59 @@ export const updateAppointment = async (req, res, next) => {
       return res.status(200).json({
         status: true,
         message: 'Appointment status updated successfully',
-        appointment: updatedAppointment,
       });
     } catch (error) {
       next(error);
     }
   };
+
+  export const fetchAppointments = async (req, res, next) => {
+    try {
+      const appointments = await Appointment.findAll({
+        include: [
+          {
+            model: User,
+            attributes: ['username'], // Include only the username
+          },
+        ],
+      });
   
+      return res.status(200).json({
+        status: true,
+        message: 'Appointments fetched successfully',
+        data: appointments,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  
+  
+
+  export const deleteAppointments = async (req, res, next) => {
+      const { id } = req.params; // Extract the appointment ID from request parameters
+  
+      try {
+          // Find the appointment by ID
+          const appointment = await Appointment.findByPk(id);
+  
+          // If appointment does not exist, return a 404 error
+          if (!appointment) {
+              return res.status(404).json({
+                  status: false,
+                  message: 'Appointment not found',
+              });
+          }
+  
+          // Delete the appointment
+          await appointment.destroy();
+  
+          // Respond with success message
+          return res.status(200).json({
+              status: true,
+              message: 'Appointment deleted successfully',
+          });
+      } catch (error) {
+        next(error);
+      }
+  };

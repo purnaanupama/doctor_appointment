@@ -1,7 +1,9 @@
 import { DataTypes } from "sequelize";
-import sequelize from '../config/dbConfig.js'
+import sequelize from "../config/dbConfig.js";
 
-const User = sequelize.define('User', {
+const User = sequelize.define(
+  "User",
+  {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -16,27 +18,33 @@ const User = sequelize.define('User', {
       allowNull: false,
       unique: true,
       validate: {
-        isEmail: true, // Ensures the email format is valid
+        isEmail: true,
       },
     },
     password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     mobileNumber: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('admin', 'patient'),
-      defaultValue: 'patient',
+      type: DataTypes.ENUM("admin", "patient"),
+      defaultValue: "patient",
       allowNull: false,
-    }
-  }, {
+    },
+  },
+  {
     underscored: true,
-    tableName: 'users', // Specify the table name to match the database
-    timestamps: false, // If you don't want Sequelize to auto-add `createdAt` and `updatedAt` fields
-  });
-  
-  export default User;
+    tableName: "users",
+    timestamps: false,
+  }
+);
+
+// Association function to be called later
+User.associate = (models) => {
+  User.hasMany(models.Appointment, { foreignKey: "patientId", onDelete: "CASCADE" });
+};
+
+export default User;
