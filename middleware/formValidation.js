@@ -18,13 +18,8 @@ export const validateRegisterUser = [
 
   body('mobileNumber')
     .notEmpty()
-    .withMessage('Mobile Number is required'),
-
-  body('status')
-    .notEmpty()
-    .withMessage('Status is required')
-];
-
+    .withMessage('Mobile Number is required')
+]
 //Validation when login
 export const validateLoginUser = [
   body('email')
@@ -34,4 +29,15 @@ export const validateLoginUser = [
   body('password')
     .notEmpty()
     .withMessage('Password is required')
+];
+
+//Validation when login
+export const validateAppointment = [
+  body('appointmentDate')
+    .isEmail()
+    .withMessage('Appointment date is required'),
+
+  body('appointmentTime')
+    .notEmpty()
+    .withMessage('Appointment Time is required')
 ];

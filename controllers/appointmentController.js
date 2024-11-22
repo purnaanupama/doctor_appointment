@@ -1,4 +1,5 @@
 import Appointment from "../models/Appointment.js";
+import User from "../models/User.js";
 
 
 export const addAppointment=async(req,res,next)=>{
@@ -34,11 +35,7 @@ export const addAppointment=async(req,res,next)=>{
       });
       
     } catch (error) {
-      return res.status(500).json({
-            status: false,
-            message: 'Error creating appointment',
-            error:error.message
-          }); 
+      next(error);
     }
 }
 
@@ -70,12 +67,7 @@ export const updateAppointment = async (req, res, next) => {
         appointment: updatedAppointment,
       });
     } catch (error) {
-      console.error('Error updating appointment:', error);
-      return res.status(500).json({
-        status: false,
-        message: 'Something went wrong',
-      });
+      next(error);
     }
   };
-  
   
