@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 
 //User register
+//user new reducer
 export const registerUser = async (req, res, next) => {
   //Check is any validation error are there
   const errors = validationResult(req);
