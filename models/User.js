@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/DBconfig');
+import { DataTypes } from "sequelize";
+import sequelize from '../config/dbConfig.js'
 
 const User = sequelize.define('User', {
     id: {
@@ -7,7 +7,7 @@ const User = sequelize.define('User', {
       autoIncrement: true,
       primaryKey: true,
     },
-    full_name: {
+    username: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -18,22 +18,24 @@ const User = sequelize.define('User', {
       validate: {
         isEmail: true, // Ensures the email format is valid
       },
-    },
-    mobile_number: {
-      type: DataTypes.STRING(15),
-      allowNull: false,
-    },
-    age: {
-      type: DataTypes.INTEGER,
-      allowNull: true, // Optional field
-    },
     password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+    },
+    mobileNumber: {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    role: {
+      type: DataTypes.ENUM('admin', 'patient'),
+      defaultValue: 'patient',
+      allowNull: false,
+    }
   }, {
+    underscored: true,
     tableName: 'users', // Specify the table name to match the database
     timestamps: false, // If you don't want Sequelize to auto-add `createdAt` and `updatedAt` fields
   });
   
-  module.exports = User;
+  export default User;
