@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
+import axios from 'axios';
 
 //User register
 //user new reducer
@@ -63,45 +64,65 @@ export const registerUser = async (req, res, next) => {
 
   //User Login
   export const loginUser = async (req, res, next) => {
-    //Check is any validation error are there
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-
-    const { email, password } = req.body;
+  
+    const { email, password, 'g-recaptcha-response': recaptchaToken } = req.body;
   
     try {
-      // Check email as user credentials
+      // Verify reCAPTCHA token
+      const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Your secret key from reCAPTCHA admin panel
+      const recaptchaResponse = await axios.post(
+        `https://www.google.com/recaptcha/api/siteverify`,
+        null,
+        {
+          params: {
+            secret: secretKey,
+            response: recaptchaToken,
+          },
+        }
+      );
+  
+      if (!recaptchaResponse.data.success) {
+        return res.status(400).json({
+          status: false,
+          message: 'ReCAPTCHA verification failed. Please try again.',
+        });
+      }
+  
+      // Check user credentials
       const user = await User.findOne({
         where: { email },
-        attributes: ['email', 'password']
+        attributes: ['id', 'email', 'password', 'role'],
       });
-
-      if(!user){
+  
+      if (!user) {
         return res.status(400).json({
           status: false,
           message: 'User not found!!!',
         });
       }
   
-      // Check password as user credentials
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(401).json({
           status: false,
           message: 'Password is incorrect, Please try again',
         });
-      };
+      }
   
-      // Create jwt token
-      const payload = { id: user.id, role: user.role };  // Corrected from user.userId
-      const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '1hr' });
+      // Create JWT token
+      const payload = { id: user.id, role: user.role };
+      const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+        expiresIn: '1hr',
+      });
   
       // Setting up JWT token in cookie
       res.cookie('token', token, {
         httpOnly: true,
-        expires: new Date(Date.now() + 3600000), // Token expiration time (1 hour)
+        expires: new Date(Date.now() + 3600000),
       });
   
       return res.status(200).json({
@@ -114,21 +135,3 @@ export const registerUser = async (req, res, next) => {
       next(error);
     }
   };
-  
-  //User logout functionality
-export const logout = async (req, res, next) => {
-  try {
-    // Clear the token cookie by setting it with an immediate expiration
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: true
-    });
-
-    return res.status(200).json({
-      success: 'success',
-      message: 'Logged out successfully.'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
