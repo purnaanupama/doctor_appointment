@@ -73,24 +73,24 @@ export const registerUser = async (req, res, next) => {
   
     try {
       // Verify reCAPTCHA token
-      const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Your secret key from reCAPTCHA admin panel
-      const recaptchaResponse = await axios.post(
-        `https://www.google.com/recaptcha/api/siteverify`,
-        null,
-        {
-          params: {
-            secret: secretKey,
-            response: recaptchaToken,
-          },
-        }
-      );
+      // const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Your secret key from reCAPTCHA admin panel
+      // const recaptchaResponse = await axios.post(
+      //   `https://www.google.com/recaptcha/api/siteverify`,
+      //   null,
+      //   {
+      //     params: {
+      //       secret: secretKey,
+      //       response: recaptchaToken,
+      //     },
+      //   }
+      // );
   
-      if (!recaptchaResponse.data.success) {
-        return res.status(400).json({
-          status: false,
-          message: 'ReCAPTCHA verification failed. Please try again.',
-        });
-      }
+      // if (!recaptchaResponse.data.success) {
+      //   return res.status(400).json({
+      //     status: false,
+      //     message: 'ReCAPTCHA verification failed. Please try again.',
+      //   });
+      // }
   
       // Check user credentials
       const user = await User.findOne({
@@ -135,3 +135,37 @@ export const registerUser = async (req, res, next) => {
       next(error);
     }
   };
+
+  //User logout functionality
+export const logout = async (req, res, next) => {
+  try {
+    // Clear the token cookie by setting it with an immediate expiration
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: true
+    });
+
+    return res.status(200).json({
+      success: 'success',
+      message: 'Logged out successfully.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUser = async (req, res, next)=>{
+  try {
+    const user = req.user;
+    const user_data = await User.findByPk(user)
+    console.log(user);
+    const userPlain = user_data.get({ plain: true });
+    const {id,...rest} = userPlain;
+    return res.status(200).json({
+      success: 'success',
+      data:rest
+    });
+  } catch (error) {
+      next(error)
+  }
+}

@@ -16,7 +16,7 @@ export const verifyToken = (req, res, next) => {
 
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    req.user = decodedToken; //Store decoded user data into request object
+    req.user = decodedToken.id; //Store decoded user data into request object
     next(); //Proceed to the next middleware or route
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

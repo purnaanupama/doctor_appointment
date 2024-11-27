@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+    font-family: "Montserrat", sans-serif;
+  }
+
+/* Background image for the page */
+.register-bg {
+    background-image: url('https://img.freepik.com/free-photo/flat-lay-health-still-life-arrangement-with-copy-space_23-2148854064.jpg?t=st=1732699076~exp=1732702676~hmac=d0f5d71fe17cf0a6c1343e8ecfb88d751ef32f0a4498c3112f736479b4076c13&w=1060'); /* Replace 'example.jpg' with your actual path */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+.login-bg {
+    background-image: url('https://img.freepik.com/free-photo/top-view-frame-with-stethoscope_23-2148504583.jpg?t=st=1732703938~exp=1732707538~hmac=3c1d1f72e0ae59ece0a66b81c5bb806cd74558953684e4bff0dc473e5ee444b8&w=1060'); /* Replace 'example.jpg' with your actual path */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+  
+  /* Glassmorphism card */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.2); /* Semi-transparent white */
+    backdrop-filter: blur(15px); /* Blur effect */
+    -webkit-backdrop-filter: blur(15px); /* Safari compatibility */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Optional border */
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+  }

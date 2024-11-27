@@ -5,6 +5,7 @@ import sequelize from './config/dbConfig.js';
 import userRouter from './routes/userRoutes.js';
 import appointmentRouter from './routes/appointmentRoutes.js'
 import { errorHandler } from './middleware/errorHanlder.js';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -13,6 +14,10 @@ const app = express(); //create express app
 app.use(express.json()); //Parses incoming requests with JSON payloads
 app.use(express.urlencoded({extended:true})); //Parses URL-encoded data from requests
 app.use(cookieParser()); //Parses cookies attached to client requests and makes them available in req.cookies.
+app.use(cors({
+  origin:process.env.FRONT_URL,
+  credentials:true
+}));
 
 // Check database connection
 sequelize
