@@ -31,7 +31,7 @@ sequelize
 
 // Sync database
 sequelize
-  .sync({ alter: true })
+  .sync()
   .then(() => {
     console.log('Database synced');
   })
