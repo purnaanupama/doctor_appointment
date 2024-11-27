@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginUser, logout, registerUser } from '../controllers/userController.js';
+import { getUser, loginUser, logout, registerUser } from '../controllers/userController.js';
 import {
     validateRegisterUser,
     validateLoginUser
@@ -11,5 +11,6 @@ const router = express.Router();
 router.post('/register',validateRegisterUser, registerUser);
 router.post('/login',validateLoginUser, loginUser);
 router.post('/logout',verifyToken, logout);
+router.get('/current-user', verifyToken, getUser);
 
 export default router;
