@@ -64,35 +64,44 @@ export const registerUser = async (req, res, next) => {
 
   //User Login
   export const loginUser = async (req, res, next) => {
+    // Validate request body
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
   
-    const { email, password, 'g-recaptcha-response': recaptchaToken } = req.body;
+    const { email, password, captchaToken } = req.body;
+  
+    // Check if required fields are present
+    if (!email || !password || !captchaToken) {
+      return res.status(400).json({
+        status: false,
+        message: 'Email, password, and reCAPTCHA response are required.',
+      });
+    }
   
     try {
       // Verify reCAPTCHA token
-      // const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Your secret key from reCAPTCHA admin panel
-      // const recaptchaResponse = await axios.post(
-      //   `https://www.google.com/recaptcha/api/siteverify`,
-      //   null,
-      //   {
-      //     params: {
-      //       secret: secretKey,
-      //       response: recaptchaToken,
-      //     },
-      //   }
-      // );
+      const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+      const recaptchaResponse = await axios.post(
+        `https://www.google.com/recaptcha/api/siteverify`,
+        null,
+        {
+          params: {
+            secret: secretKey,
+            response: captchaToken,
+          },
+        }
+      );
   
-      // if (!recaptchaResponse.data.success) {
-      //   return res.status(400).json({
-      //     status: false,
-      //     message: 'ReCAPTCHA verification failed. Please try again.',
-      //   });
-      // }
+      if (!recaptchaResponse.data.success) {
+        return res.status(400).json({
+          status: false,
+          message: recaptchaResponse.data['error-codes'] || 'ReCAPTCHA verification failed. Please try again.',
+        });
+      }
   
-      // Check user credentials
+      // Find user in database
       const user = await User.findOne({
         where: { email },
         attributes: ['id', 'email', 'password', 'role'],
@@ -101,30 +110,34 @@ export const registerUser = async (req, res, next) => {
       if (!user) {
         return res.status(400).json({
           status: false,
-          message: 'User not found!!!',
+          message: 'User not found!',
         });
       }
   
+      // Compare password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(401).json({
           status: false,
-          message: 'Password is incorrect, Please try again',
+          message: 'Password is incorrect. Please try again.',
         });
       }
   
-      // Create JWT token
+      // Generate JWT token
       const payload = { id: user.id, role: user.role };
       const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: '1hr',
+        expiresIn: '1h',
       });
   
-      // Setting up JWT token in cookie
+      // Set JWT token in HTTP-only cookie
       res.cookie('token', token, {
         httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
         expires: new Date(Date.now() + 3600000),
       });
   
+      // Send response
       return res.status(200).json({
         status: true,
         token,
@@ -132,7 +145,8 @@ export const registerUser = async (req, res, next) => {
         message: 'User is logged in successfully',
       });
     } catch (error) {
-      next(error);
+      // Handle unexpected errors
+      return next(error);
     }
   };
 
