@@ -48,6 +48,7 @@ export const registerUser = async (req, res, next) => {
       //Setting up JWT token in cookie
       res.cookie('token', token, {
         httpOnly: true,
+        path: "/",
         expires: new Date(Date.now() + 3600000) //Token expiretion time (1 hour)
       });
   
@@ -151,12 +152,14 @@ export const registerUser = async (req, res, next) => {
   };
 
   //User logout functionality
-export const logout = async (req, res, next) => {
+export const logout = (req, res, next) => {
   try {
+    console.log('token',);
+    
     // Clear the token cookie by setting it with an immediate expiration
     res.clearCookie('token', {
       httpOnly: true,
-      secure: true
+      secure:true
     });
 
     return res.status(200).json({
@@ -174,7 +177,7 @@ export const getUser = async (req, res, next)=>{
     const user_data = await User.findByPk(user)
     console.log(user);
     const userPlain = user_data.get({ plain: true });
-    const {id,...rest} = userPlain;
+    const {password,...rest} = userPlain;
     return res.status(200).json({
       success: 'success',
       data:rest

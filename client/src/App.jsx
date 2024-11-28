@@ -8,6 +8,12 @@ import { setUserDetails } from './store/userSlice';
 import axios from 'axios';
 import { useEffect } from 'react';
 import Context from './context/context';
+import Admin from './pages/Admin';
+import Appointment_Admin from './pages/Appointment_Admin';
+import User_Admin from './pages/User_Admin';
+import Appointment_Patient from './pages/Appointment_Patient';
+
+
 
 const App = () => {
   const dispatch = useDispatch();
@@ -20,7 +26,7 @@ const App = () => {
       });
       if (response.data) {
         dispatch(setUserDetails(response.data));
-        console.log(response.data);
+        console.log(response.data);  
       } else {
         // Redirect to login if no user data is found
         navigate('/login');
@@ -37,13 +43,19 @@ const App = () => {
 
   return (
     <Context.Provider value={{ fetchUserDetails }}>
-        <ToastContainer />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
-    </Context.Provider>
+    <ToastContainer />
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/admin" element={<Admin />}>
+        {/* Nested route for dashboard inside /admin */}
+        <Route path="dashboard" element={<Appointment_Admin />}/>
+        <Route path="user" element={<User_Admin />} />
+      </Route>
+      <Route path='/appointment' element={<Appointment_Patient/>}/>
+    </Routes>
+</Context.Provider>
   );
 };
 

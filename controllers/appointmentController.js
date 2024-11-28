@@ -88,6 +88,23 @@ export const updateAppointment = async (req, res, next) => {
       next(error);
     }
   }
+
+  export const fetchUserAppointments = async(req,res,next)=>{
+    try {
+      const {id} = req.params
+      const appointments = await Appointment.findAll({
+        where: {
+          patient_id: id // Replace with dynamic `req.params.patient_id` or `req.user.id` if needed
+        }})
+        return res.status(200).json({
+          status: true,
+          message: 'Appointments fetched successfully',
+          data: appointments,
+        });
+    } catch (error) {
+      next(error)
+    }
+  }
   
   
 
