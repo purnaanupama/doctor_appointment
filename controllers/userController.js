@@ -113,7 +113,7 @@ export const enable2FA = async(req, res, next) => {
 
     //Generete 2FA secret
     const secret = speakeasy.generateSecret({
-      name: MediCare (${user.email})
+      name: `MediCare (${user.email})`
     });
 
     //Save secret key to the table
