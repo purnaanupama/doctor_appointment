@@ -223,3 +223,41 @@ export const enable2FA = async(req, res, next) => {
     next(error);
   }
 }
+
+//Verifying 2FA
+export const verify2FA = async (req, res, next) => {
+  const { otp } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findByPk(userId);
+
+    if (!user || !user.twoFactorSecret) {
+      return res.status(400).json({ 
+        status: false, 
+        message: '2FA is not enabled for this user'
+       });
+    }
+
+    // Verify the OTP
+    const isValid = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: otp,
+    });
+
+    if (!isValid) {
+      return res.status(401).json({ 
+        status: false, 
+        message: 'Invalid OTP' 
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: '2FA verified successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
