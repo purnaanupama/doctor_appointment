@@ -51,4 +51,4 @@ User.associate = (models) => {
   User.hasMany(models.Appointment, { foreignKey: "patientId", onDelete: "CASCADE" });
 };
 
-export default User;
+export default User;
