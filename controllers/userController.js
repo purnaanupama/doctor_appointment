@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import axios from 'axios';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 
 //User register
 //user new reducer
@@ -181,5 +183,43 @@ export const getUser = async (req, res, next)=>{
     });
   } catch (error) {
       next(error)
+  }
+}
+
+//Implement 2FA
+export const enable2FA = async(req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+
+    if(!user){
+      return res.status(404).json({
+        status: false,
+        message: 'User not found!!',
+      });
+    }
+
+    //Generete 2FA secret
+    const secret = speakeasy.generateSecret({
+      name: `MediCare (${user.email})`
+    });
+
+    //Save secret key to the table
+    user.twoFactorSecret = secret;
+    user.save();
+
+    // Generate QR code for authenticator app
+    QRCode.toDataURL(secret.otpauth_url, (err, dataURL) => {
+      if (err) {
+        return next(err);
+      }
+      res.status(200).json({
+        status: true,
+        message: '2FA enabled successfully',
+        qrCode: dataURL, // QR code for the user to scan
+      });
+    });
+  } catch (error) {
+    next(error);
   }
 }
