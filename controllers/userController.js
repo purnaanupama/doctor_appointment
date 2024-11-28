@@ -2,7 +2,8 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
-import axios from 'axios';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 
 //User register
 //user new reducer
@@ -63,93 +64,93 @@ export const registerUser = async (req, res, next) => {
   };
 
 
-  //User Login
-  export const loginUser = async (req, res, next) => {
-    // Validate request body
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+  // //User Login
+  // export const loginUser = async (req, res, next) => {
+  //   // Validate request body
+  //   const errors = validationResult(req);
+  //   if (!errors.isEmpty()) {
+  //     return res.status(400).json({ errors: errors.array() });
+  //   }
   
-    const { email, password, captchaToken } = req.body;
+  //   const { email, password, captchaToken } = req.body;
   
-    // Check if required fields are present
-    if (!email || !password || !captchaToken) {
-      return res.status(400).json({
-        status: false,
-        message: 'Email, password, and reCAPTCHA response are required.',
-      });
-    }
+  //   // Check if required fields are present
+  //   if (!email || !password || !captchaToken) {
+  //     return res.status(400).json({
+  //       status: false,
+  //       message: 'Email, password, and reCAPTCHA response are required.',
+  //     });
+  //   }
   
-    try {
-      // Verify reCAPTCHA token
-      const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-      const recaptchaResponse = await axios.post(
-        `https://www.google.com/recaptcha/api/siteverify`,
-        null,
-        {
-          params: {
-            secret: secretKey,
-            response: captchaToken,
-          },
-        }
-      );
+  //   try {
+  //     // Verify reCAPTCHA token
+  //     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+  //     const recaptchaResponse = await axios.post(
+  //       `https://www.google.com/recaptcha/api/siteverify`,
+  //       null,
+  //       {
+  //         params: {
+  //           secret: secretKey,
+  //           response: captchaToken,
+  //         },
+  //       }
+  //     );
   
-      if (!recaptchaResponse.data.success) {
-        return res.status(400).json({
-          status: false,
-          message: recaptchaResponse.data['error-codes'] || 'ReCAPTCHA verification failed. Please try again.',
-        });
-      }
+  //     if (!recaptchaResponse.data.success) {
+  //       return res.status(400).json({
+  //         status: false,
+  //         message: recaptchaResponse.data['error-codes'] || 'ReCAPTCHA verification failed. Please try again.',
+  //       });
+  //     }
   
-      // Find user in database
-      const user = await User.findOne({
-        where: { email },
-        attributes: ['id', 'email', 'password', 'role'],
-      });
+  //     // Find user in database
+  //     const user = await User.findOne({
+  //       where: { email },
+  //       attributes: ['id', 'email', 'password', 'role'],
+  //     });
   
-      if (!user) {
-        return res.status(400).json({
-          status: false,
-          message: 'User not found!',
-        });
-      }
+  //     if (!user) {
+  //       return res.status(400).json({
+  //         status: false,
+  //         message: 'User not found!',
+  //       });
+  //     }
   
-      // Compare password
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(401).json({
-          status: false,
-          message: 'Password is incorrect. Please try again.',
-        });
-      }
+  //     // Compare password
+  //     const isMatch = await bcrypt.compare(password, user.password);
+  //     if (!isMatch) {
+  //       return res.status(401).json({
+  //         status: false,
+  //         message: 'Password is incorrect. Please try again.',
+  //       });
+  //     }
   
-      // Generate JWT token
-      const payload = { id: user.id, role: user.role };
-      const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: '1h',
-      });
+  //     // Generate JWT token
+  //     const payload = { id: user.id, role: user.role };
+  //     const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+  //       expiresIn: '1h',
+  //     });
   
-      // Set JWT token in HTTP-only cookie
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        expires: new Date(Date.now() + 3600000),
-      });
+  //     // Set JWT token in HTTP-only cookie
+  //     res.cookie('token', token, {
+  //       httpOnly: true,
+  //       secure: process.env.NODE_ENV === 'production',
+  //       sameSite: 'strict',
+  //       expires: new Date(Date.now() + 3600000),
+  //     });
   
-      // Send response
-      return res.status(200).json({
-        status: true,
-        token,
-        data: { id: user.id, email },
-        message: 'User is logged in successfully',
-      });
-    } catch (error) {
-      // Handle unexpected errors
-      return next(error);
-    }
-  };
+  //     // Send response
+  //     return res.status(200).json({
+  //       status: true,
+  //       token,
+  //       data: { id: user.id, email },
+  //       message: 'User is logged in successfully',
+  //     });
+  //   } catch (error) {
+  //     // Handle unexpected errors
+  //     return next(error);
+  //   }
+  // };
 
   //User logout functionality
 export const logout = (req, res, next) => {
@@ -186,3 +187,158 @@ export const getUser = async (req, res, next)=>{
       next(error)
   }
 }
+
+//Implement 2FA
+export const enable2FA = async(req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+
+    if(!user){
+      return res.status(404).json({
+        status: false,
+        message: 'User not found!!',
+      });
+    }
+
+    //Generete 2FA secret
+    const secret = speakeasy.generateSecret({
+      name: `MediCare (${user.email})`
+    });
+
+    //Save secret key to the table
+    user.twoFactorSecret = secret;
+    user.save();
+
+    // Generate QR code for authenticator app
+    QRCode.toDataURL(secret.otpauth_url, (err, dataURL) => {
+      if (err) {
+        return next(err);
+      }
+      res.status(200).json({
+        status: true,
+        message: '2FA enabled successfully',
+        qrCode: dataURL, // QR code for the user to scan
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+//Verifying 2FA
+export const verify2FA = async (req, res, next) => {
+  const { otp } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findByPk(userId);
+
+    if (!user || !user.twoFactorSecret) {
+      return res.status(400).json({ 
+        status: false, 
+        message: '2FA is not enabled for this user'
+       });
+    }
+
+    // Verify the OTP
+    const isValid = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: otp,
+    });
+
+    if (!isValid) {
+      return res.status(401).json({ 
+        status: false, 
+        message: 'Invalid OTP' 
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: '2FA verified successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const loginUser = async (req, res, next) => {
+  // Validate request body
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { email, password, otp } = req.body;
+
+  try {
+    const user = await User.findOne({
+      where: { email },
+      attributes: ['id', 'email', 'password', 'role', 'twoFactorSecret'],
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: 'User not found!',
+      });
+    }
+
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        status: false,
+        message: 'Password is incorrect. Please try again.',
+      });
+    }
+
+    // Check if 2FA is enabled
+    if (user.twoFactorSecret) {
+      if (!otp) {
+        return res.status(400).json({
+          status: false,
+          message: 'OTP is required for 2FA.',
+        });
+      }
+
+      // Verify OTP
+      const isValid = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token: otp,
+      });
+
+      if (!isValid) {
+        return res.status(401).json({
+          status: false,
+          message: 'Invalid OTP',
+        });
+      }
+    }
+
+    // Generate JWT token
+    const payload = { id: user.id, role: user.role };
+    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+      expiresIn: '1h',
+    });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: 'strict',
+      expires: new Date(Date.now() + 3600000),
+    });
+
+    return res.status(200).json({
+      status: true,
+      token,
+      data: { id: user.id, email },
+      message: 'User is logged in successfully',
+    });
+  } catch (error) {
+    next(error);
+    }
+  };
