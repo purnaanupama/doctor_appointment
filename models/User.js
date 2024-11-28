@@ -34,6 +34,10 @@ const User = sequelize.define(
       defaultValue: "patient",
       allowNull: false,
     },
+    twoFactorSecret: {
+      type: DataTypes.STRING,
+      allowNull: true, // Null initially, updated when 2FA is enabled
+    },
   },
   {
     underscored: true,
