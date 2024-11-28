@@ -1,5 +1,11 @@
 import express from 'express';
-import { getUser, loginUser, logout, registerUser } from '../controllers/userController.js';
+import { 
+  getUser, 
+  loginUser, 
+  logout, 
+  registerUser, 
+  enable2FA, 
+  verify2FA } from '../controllers/userController.js';
 import {
     validateRegisterUser,
     validateLoginUser
