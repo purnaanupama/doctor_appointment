@@ -12,5 +12,8 @@ router.post('/register',validateRegisterUser, registerUser);
 router.post('/login',validateLoginUser, loginUser);
 router.post('/logout',verifyToken, logout);
 router.get('/current-user', verifyToken, getUser);
+router.post('/enable-2fa', verifyToken, enable2FA);
+router.post('/verify-2fa', verifyToken, verify2FA);
+
 
 export default router;
