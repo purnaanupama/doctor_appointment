@@ -64,7 +64,6 @@ export const registerUser = async (req, res, next) => {
   };
 
 
-  //User Login
   export const loginUser = async (req, res, next) => {
     // Validate request body
     const errors = validationResult(req);
@@ -72,41 +71,12 @@ export const registerUser = async (req, res, next) => {
       return res.status(400).json({ errors: errors.array() });
     }
   
-    const { email, password, captchaToken } = req.body;
-  
-    // Check if required fields are present
-    if (!email || !password || !captchaToken) {
-      return res.status(400).json({
-        status: false,
-        message: 'Email, password, and reCAPTCHA response are required.',
-      });
-    }
+    const { email, password, otp } = req.body;
   
     try {
-      // Verify reCAPTCHA token
-      const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-      const recaptchaResponse = await axios.post(
-        `https://www.google.com/recaptcha/api/siteverify`,
-        null,
-        {
-          params: {
-            secret: secretKey,
-            response: captchaToken,
-          },
-        }
-      );
-  
-      if (!recaptchaResponse.data.success) {
-        return res.status(400).json({
-          status: false,
-          message: recaptchaResponse.data['error-codes'] || 'ReCAPTCHA verification failed. Please try again.',
-        });
-      }
-  
-      // Find user in database
       const user = await User.findOne({
         where: { email },
-        attributes: ['id', 'email', 'password', 'role'],
+        attributes: ['id', 'email', 'password', 'role', 'twoFactorSecret'],
       });
   
       if (!user) {
@@ -125,21 +95,42 @@ export const registerUser = async (req, res, next) => {
         });
       }
   
+      // Check if 2FA is enabled
+      if (user.twoFactorSecret) {
+        if (!otp) {
+          return res.status(400).json({
+            status: false,
+            message: 'OTP is required for 2FA.',
+          });
+        }
+  
+        // Verify OTP
+        const isValid = speakeasy.totp.verify({
+          secret: user.twoFactorSecret,
+          encoding: 'base32',
+          token: otp,
+        });
+  
+        if (!isValid) {
+          return res.status(401).json({
+            status: false,
+            message: 'Invalid OTP',
+          });
+        }
+      }
+  
       // Generate JWT token
       const payload = { id: user.id, role: user.role };
       const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
         expiresIn: '1h',
       });
   
-      // Set JWT token in HTTP-only cookie
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         expires: new Date(Date.now() + 3600000),
       });
   
-      // Send response
       return res.status(200).json({
         status: true,
         token,
@@ -147,10 +138,10 @@ export const registerUser = async (req, res, next) => {
         message: 'User is logged in successfully',
       });
     } catch (error) {
-      // Handle unexpected errors
-      return next(error);
+      next(error);
     }
   };
+  
 
   //User logout functionality
 export const logout = async (req, res, next) => {
