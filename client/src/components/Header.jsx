@@ -14,7 +14,7 @@ const Header = () => {
     const dispatch = useDispatch();
     const handleLogout=async()=>{
       try {
-       const response = await axios.get('http://localhost:3000/api/medicare/user/logout',{
+       const response = await axios.get('${import.meta.env.VITE_BASE_URL}/user/logout',{
         withCredentials: true,
        })
        console.log(response);

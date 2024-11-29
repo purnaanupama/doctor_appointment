@@ -34,6 +34,18 @@ const User = sequelize.define(
       defaultValue: "patient",
       allowNull: false,
     },
+    otpCode: {
+      type: DataTypes.STRING, // Stores the OTP
+      allowNull: true,
+    },
+    otpExpiresAt: {
+      type: DataTypes.DATE, // Stores OTP expiration timestamp
+      allowNull: true,
+    },
+    verifiedUser: {
+      type: DataTypes.BOOLEAN, // Tracks user verification status
+      defaultValue: false,
+    },
     twoFactorSecret: {
       type: DataTypes.STRING,
       allowNull: true, // Null initially, updated when 2FA is enabled
@@ -51,4 +63,4 @@ User.associate = (models) => {
   User.hasMany(models.Appointment, { foreignKey: "patientId", onDelete: "CASCADE" });
 };
 
-export default User;
+export default User;

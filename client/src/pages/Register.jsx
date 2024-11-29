@@ -85,7 +85,7 @@ const Register = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://localhost:3000/api/medicare/user/register',
+        `${import.meta.env.VITE_BASE_URL}/user/register`,
         { ...rest, captchaToken }, // Include reCAPTCHA token in the payload
         {
           withCredentials: true,

@@ -18,7 +18,7 @@ const Appointment_Patient = () => {
     if (user?.data?.id) {  // Check if user data and id are available
       try {
         console.log("user", user?.data);
-        const response = await axios.get(`http://localhost:3000/api/medicare/appointment/get-user-appointment/${user.data.id}`, {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/appointment/get-user-appointment/${user.data.id}`, {
           withCredentials: true
         });
         setUserAppointments(response.data.data); // Set user appointments array
@@ -43,7 +43,7 @@ const Appointment_Patient = () => {
 
   const cancelAppointment=async(id)=>{
     try {
-      const response = await axios.patch(`http://localhost:3000/api/medicare/appointment/update-appointment/${id}`,
+      const response = await axios.patch(`${import.meta.env.VITE_BASE_URL}/appointment/update-appointment/${id}`,
       {
         status:'cancelled'
       },
