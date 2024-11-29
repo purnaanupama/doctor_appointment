@@ -1,10 +1,18 @@
-import React from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { FaHome } from "react-icons/fa";
 import { MdAdminPanelSettings } from "react-icons/md";
 import { HiUsers } from "react-icons/hi2";
+import { useSelector } from 'react-redux';
 
 const Admin = () => {
+  const user = useSelector(state=>state.user.user);
+  const navigate = useNavigate();
+  useEffect(()=>{
+   if(user?.data?.role !== 'admin'){
+     navigate("/")
+   }
+  },[user])
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
