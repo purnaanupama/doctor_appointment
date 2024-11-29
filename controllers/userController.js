@@ -101,12 +101,12 @@ export const loginUser = async (req, res, next) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { email, password, otp } = req.body;
+  const { email, password } = req.body;
 
   try {
     const user = await User.findOne({
       where: { email },
-      attributes: ["id", "email", "password", "role", "twoFactorSecret", "verified_user"],
+      attributes: ["id", "email", "password", "role"],
     });
 
     if (!user) {
@@ -115,15 +115,6 @@ export const loginUser = async (req, res, next) => {
         message: "User not found!",
       });
     }
-
-    // Check if the user is verified
-    if (!user.verified_user) {
-      return res.status(401).json({
-        status: false,
-        message: "User is not verified! Please verify your account.",
-      });
-    }
-
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -131,30 +122,6 @@ export const loginUser = async (req, res, next) => {
         status: false,
         message: "Invalid password!",
       });
-    }
-
-    // Check if 2FA is enabled
-    if (user.twoFactorSecret) {
-      if (!otp) {
-        return res.status(400).json({
-          status: false,
-          message: "OTP is required for 2FA.",
-        });
-      }
-
-      // Verify the OTP
-      const isValid = speakeasy.totp.verify({
-        secret: user.twoFactorSecret,
-        encoding: "base32",
-        token: otp,
-      });
-
-      if (!isValid) {
-        return res.status(401).json({
-          status: false,
-          message: "Invalid OTP!",
-        });
-      }
     }
 
     // Generate JWT token

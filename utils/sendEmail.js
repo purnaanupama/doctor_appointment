@@ -3,12 +3,12 @@ import nodemailer from 'nodemailer'
 export const sendEmail = async(email,otp)=>{
     // Create a transporter using SMTP
     let transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
+      host: 'smtp.gmail.com',
       port: 587,
       secure: false, // use TLS
       auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD
+          user: 'anupamahera2022@gmail.com',
+          pass: 'ksfbiqywsbxnjwhm'
       },
       tls: {
           // do not fail on invalid certs
@@ -18,11 +18,11 @@ export const sendEmail = async(email,otp)=>{
 
   // Send mail with defined transport object
   let info = await transporter.sendMail({
-      from: process.env.EMAIL_USER, // sender address
+      from: 'anupamahera2022@gmail.com', // sender address
       to: email, // recipient email address
-      subject: 'HERE IS YOUR OTP CODE TO SUCCESSFULLY REGISTER TO DOC-MEDICARE',
-      text: `Your OTP code is: ${otp}`,
-      html: `<b>Your OTP code is: ${otp}</b>`
+      subject: 'HERE IS YOUR OTP CODE TO SUCCESSFULLY REGISTER TO ESTATE-EASE', // subject line
+      text: `Your OTP code is: ${otp}`, // plain text body
+      html: `<b>Your OTP code is: ${otp}</b>` // html body
   });
 
   if(info.messageId){

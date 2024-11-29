@@ -46,10 +46,6 @@ const User = sequelize.define(
       type: DataTypes.BOOLEAN, // Tracks user verification status
       defaultValue: false,
     },
-    twoFactorSecret: {
-      type: DataTypes.STRING,
-      allowNull: true, // Null initially, updated when 2FA is enabled
-    },
   },
   {
     underscored: true,
