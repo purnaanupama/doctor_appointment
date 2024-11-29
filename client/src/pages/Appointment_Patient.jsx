@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 import Context from '../context/context.js';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Appointment_Patient = () => {
   const { fetchUserDetails } = useContext(Context);
@@ -40,6 +41,13 @@ const Appointment_Patient = () => {
       fetchUserAppointments();
     }
   }, [user]);  // Re-run whenever `user` state changes
+
+  const navigate = useNavigate();
+  useEffect(()=>{
+   if(user?.data?.role !== 'patient'){
+     navigate("/")
+   }
+  },[user])
 
   const cancelAppointment=async(id)=>{
     try {
