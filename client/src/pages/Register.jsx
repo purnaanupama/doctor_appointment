@@ -2,30 +2,32 @@ import axios from 'axios';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import ReCAPTCHA from 'react-google-recaptcha'; // Import reCAPTCHA component
+import ReCAPTCHA from 'react-google-recaptcha';
+import DOMPurify from 'dompurify'; // Import DOMPurify for sanitization
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
 import logo from '../assets/logo.jpg';
 
 const Register = () => {
   const [registerData, setRegisterData] = useState({});
-  const [captchaToken, setCaptchaToken] = useState(''); // Store reCAPTCHA token
-  const [otp, setOtp] = useState(''); // Store OTP entered by the user
-  const [otpSent, setOtpSent] = useState(false); // Toggle between registration and OTP verification views
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleOnChange = (e) => {
     const { name, value } = e.target;
+    const sanitizedValue = DOMPurify.sanitize(value); // Sanitize user input
     setRegisterData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: sanitizedValue,
     }));
   };
 
   const handleCaptchaChange = (token) => {
-    setCaptchaToken(token); // Set reCAPTCHA token when solved
+    setCaptchaToken(token);
   };
 
   const validatePassword = (password) => {
@@ -66,14 +68,13 @@ const Register = () => {
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerData.email)) {
-      return setError('Invalid email');
+      return setError('Invalid email format');
     }
 
     if (!/^0[0-9]{9}$/.test(registerData.mobileNumber)) {
       return setError('Invalid mobile number format');
     }
 
-    // Validate reCAPTCHA
     if (!captchaToken) {
       return setError('Please complete the reCAPTCHA');
     }
@@ -84,13 +85,13 @@ const Register = () => {
       setLoading(true);
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/user/register`,
-        { ...rest, captchaToken }, // Include reCAPTCHA token in the payload
+        { ...rest, captchaToken },
         {
           withCredentials: true,
         }
       );
       setLoading(false);
-      setOtpSent(true); // Show OTP verification view
+      setOtpSent(true);
       toast.success('OTP sent to your email!', {
         className: 'custom-toast',
       });
@@ -123,7 +124,7 @@ const Register = () => {
       toast.success('Verification successful!', {
         className: 'custom-toast',
       });
-      navigate('/'); // Redirect to home page
+      navigate('/');
       console.log(response.data.message);
     } catch (error) {
       setLoading(false);
@@ -201,7 +202,7 @@ const Register = () => {
                 onChange={handleOnChange}
               />
               <ReCAPTCHA
-                sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY} // Replace with your reCAPTCHA site key
+                sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY}
                 onChange={handleCaptchaChange}
               />
               <button

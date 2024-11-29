@@ -2,7 +2,8 @@ import axios from 'axios';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import ReCAPTCHA from 'react-google-recaptcha'; // Import reCAPTCHA component
+import ReCAPTCHA from 'react-google-recaptcha';
+import DOMPurify from 'dompurify'; // Import DOMPurify for sanitization
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
 import logo from '../assets/logo.jpg';
@@ -12,37 +13,38 @@ const Login = () => {
     email: '',
     password: '',
   });
-  const [captchaToken, setCaptchaToken] = useState(''); // Store reCAPTCHA token
+  const [captchaToken, setCaptchaToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleOnChange = (e) => {
     const { name, value } = e.target;
+
+    // Sanitize user input before setting it to state
+    const sanitizedValue = DOMPurify.sanitize(value);
+
     setData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: sanitizedValue, // Store sanitized value
     }));
   };
 
   const handleCaptchaChange = (token) => {
-    setCaptchaToken(token); // Set reCAPTCHA token when solved
+    setCaptchaToken(token);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate email
     if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
       return setError('Please enter a valid email address');
     }
 
-    // Validate password
     if (!data.password || data.password.length < 8) {
       return setError('Password must be at least 8 characters long');
     }
 
-    // Validate reCAPTCHA
     if (!captchaToken) {
       return setError('Please complete the reCAPTCHA');
     }
@@ -50,11 +52,10 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    console.log({...data, captchaToken})
     try {
       const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/user/login`,
-        { ...data, captchaToken }, // Include reCAPTCHA token in the payload
+        `${import.meta.env.VITE_BASE_URL}/user/login`,
+        { ...data, captchaToken },
         {
           withCredentials: true,
         }
@@ -96,7 +97,7 @@ const Login = () => {
             onChange={handleOnChange}
           />
           <ReCAPTCHA
-            sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY} // Replace with your reCAPTCHA site key
+            sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY}
             onChange={handleCaptchaChange}
           />
           <button

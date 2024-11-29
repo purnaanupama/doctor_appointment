@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post('/register',validateRegisterUser, registerUser);
 router.post('/login',validateLoginUser, loginUser);
-router.post('/logout',verifyToken, logout);
+router.get('/logout',verifyToken, logout);
 router.post('/verify-otp', accountVerify);
 router.get('/current-user', verifyToken, getUser);
 
