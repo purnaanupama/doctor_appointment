@@ -21,7 +21,7 @@ const Appointment_Form = ({ setOpen, fetchAppointments }) => {
     e.preventDefault();
     try {
       setLoading(true)
-      const response = await axios.post('http://localhost:3000/api/medicare/appointment/create-appointment',
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/appointment/create-appointment`,
         {
           doctor_name: data.doctor_name,
           status: "pending",

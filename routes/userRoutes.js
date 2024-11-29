@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUser, loginUser, logout, registerUser, enable2FA, verify2FA } from '../controllers/userController.js';
+import { getUser, loginUser, logout, registerUser, accountVerify } from '../controllers/userController.js';
 import {
     validateRegisterUser,
     validateLoginUser
@@ -10,9 +10,8 @@ const router = express.Router();
 
 router.post('/register',validateRegisterUser, registerUser);
 router.post('/login',validateLoginUser, loginUser);
-router.get('/logout',verifyToken,logout);
-router.get('/current-user',verifyToken,getUser);
-router.post('/enable-2fa', verifyToken, enable2FA);
-router.post('/verify-2fa', verifyToken, verify2FA);
+router.get('/logout',verifyToken, logout);
+router.post('/verify-otp', accountVerify);
+router.get('/current-user', verifyToken, getUser);
 
 export default router;

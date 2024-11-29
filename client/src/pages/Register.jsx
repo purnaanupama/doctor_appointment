@@ -2,28 +2,32 @@ import axios from 'axios';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import ReCAPTCHA from 'react-google-recaptcha'; // Import reCAPTCHA component
+import ReCAPTCHA from 'react-google-recaptcha';
+import DOMPurify from 'dompurify'; // Import DOMPurify for sanitization
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
 import logo from '../assets/logo.jpg';
 
 const Register = () => {
   const [registerData, setRegisterData] = useState({});
-  const [captchaToken, setCaptchaToken] = useState(''); // Store reCAPTCHA token
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleOnChange = (e) => {
     const { name, value } = e.target;
+    const sanitizedValue = DOMPurify.sanitize(value); // Sanitize user input
     setRegisterData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: sanitizedValue,
     }));
   };
 
   const handleCaptchaChange = (token) => {
-    setCaptchaToken(token); // Set reCAPTCHA token when solved
+    setCaptchaToken(token);
   };
 
   const validatePassword = (password) => {
@@ -64,18 +68,13 @@ const Register = () => {
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerData.email)) {
-      return setError('Invalid email');
-    }
-
-    if (!/^[0-9]+$/.test(registerData.mobileNumber)) {
-      return setError('Only numbers are allowed in the mobile number field');
+      return setError('Invalid email format');
     }
 
     if (!/^0[0-9]{9}$/.test(registerData.mobileNumber)) {
       return setError('Invalid mobile number format');
     }
 
-    // Validate reCAPTCHA
     if (!captchaToken) {
       return setError('Please complete the reCAPTCHA');
     }
@@ -85,17 +84,17 @@ const Register = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://localhost:3000/api/medicare/user/register',
-        { ...rest, captchaToken }, // Include reCAPTCHA token in the payload
+        `${import.meta.env.VITE_BASE_URL}/user/register`,
+        { ...rest, captchaToken },
         {
           withCredentials: true,
         }
       );
       setLoading(false);
-      toast.success('Registered Successfully!', {
+      setOtpSent(true);
+      toast.success('OTP sent to your email!', {
         className: 'custom-toast',
       });
-      navigate('/');
       console.log(response.data.message);
     } catch (error) {
       setLoading(false);
@@ -105,66 +104,119 @@ const Register = () => {
     }
   };
 
+  const handleOtpVerification = async (e) => {
+    e.preventDefault();
+
+    if (!otp) {
+      return setError('Please enter the OTP');
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/user/verify-otp`,
+        { email: registerData.email, otp },
+        {
+          withCredentials: true,
+        }
+      );
+      setLoading(false);
+      toast.success('Verification successful!', {
+        className: 'custom-toast',
+      });
+      navigate('/');
+      console.log(response.data.message);
+    } catch (error) {
+      setLoading(false);
+      toast.error(error.response?.data?.message || 'Verification failed', {
+        className: 'custom-toast',
+      });
+    }
+  };
+
   return (
     <div className="register-bg flex justify-center items-center h-screen bg-cover bg-center">
       <img className="absolute top-10 left-10 w-[250px]" src={logo} alt="" />
       <div className="glass-card flex flex-col w-[500px] items-center gap-6 p-10 rounded-md">
-        <p className="font-semibold text-lg">Get Started</p>
-        <form className="flex flex-col gap-6 w-full items-center" onSubmit={handleSubmit}>
-          <input
-            className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
-            type="text"
-            placeholder="Enter your name"
-            value={registerData.username || ''}
-            name="username"
-            onChange={handleOnChange}
-          />
-          <input
-            className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
-            type="email"
-            placeholder="Enter email address"
-            value={registerData.email || ''}
-            name="email"
-            onChange={handleOnChange}
-          />
-          <input
-            className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
-            type="tel"
-            placeholder="Enter phone number"
-            value={registerData.mobileNumber || ''}
-            name="mobileNumber"
-            onChange={handleOnChange}
-          />
-          <input
-            className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
-            type="password"
-            placeholder="Enter password"
-            value={registerData.password || ''}
-            name="password"
-            onChange={handleOnChange}
-          />
-          <input
-            className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
-            type="password"
-            placeholder="Confirm password"
-            value={registerData.confirm_password || ''}
-            name="confirm_password"
-            onChange={handleOnChange}
-          />
-          <ReCAPTCHA
-            sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY} // Replace with your reCAPTCHA site key
-            onChange={handleCaptchaChange}
-          />
-          <button
-            className="w-[200px] rounded-md bg-[#333d6a] bg-opacity-80 text-white py-2 px-6 hover:bg-opacity-50"
-            type="submit"
-          >
-            {loading ? 'Loading...' : 'Register'}
-          </button>
-          <p>
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
-        </form>
+        {otpSent ? (
+          <>
+            <p className="font-semibold text-lg">Enter OTP</p>
+            <form className="flex flex-col gap-6 w-full items-center" onSubmit={handleOtpVerification}>
+              <input
+                className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
+                type="text"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+              <button
+                className="w-[200px] rounded-md bg-[#333d6a] bg-opacity-80 text-white py-2 px-6 hover:bg-opacity-50"
+                type="submit"
+              >
+                {loading ? 'Loading...' : 'Verify OTP'}
+              </button>
+            </form>
+          </>
+        ) : (
+          <>
+            <p className="font-semibold text-lg">Get Started</p>
+            <form className="flex flex-col gap-6 w-full items-center" onSubmit={handleSubmit}>
+              <input
+                className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
+                type="text"
+                placeholder="Enter your name"
+                value={registerData.username || ''}
+                name="username"
+                onChange={handleOnChange}
+              />
+              <input
+                className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
+                type="email"
+                placeholder="Enter email address"
+                value={registerData.email || ''}
+                name="email"
+                onChange={handleOnChange}
+              />
+              <input
+                className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
+                type="tel"
+                placeholder="Enter phone number"
+                value={registerData.mobileNumber || ''}
+                name="mobileNumber"
+                onChange={handleOnChange}
+              />
+              <input
+                className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
+                type="password"
+                placeholder="Enter password"
+                value={registerData.password || ''}
+                name="password"
+                onChange={handleOnChange}
+              />
+              <input
+                className="py-2 px-4 w-full rounded-md outline-none bg-white bg-opacity-60 text-black placeholder-gray-500"
+                type="password"
+                placeholder="Confirm password"
+                value={registerData.confirm_password || ''}
+                name="confirm_password"
+                onChange={handleOnChange}
+              />
+              <ReCAPTCHA
+                sitekey={import.meta.env.VITE_RECAPCHA_SITE_KEY}
+                onChange={handleCaptchaChange}
+              />
+              <button
+                className="w-[200px] rounded-md bg-[#333d6a] bg-opacity-80 text-white py-2 px-6 hover:bg-opacity-50"
+                type="submit"
+              >
+                {loading ? 'Loading...' : 'Register'}
+              </button>
+              <p>
+                Already have an account? <Link to="/login">Login</Link>
+              </p>
+            </form>
+          </>
+        )}
         {error && (
           <p className="bg-red-200 bg-opacity-60 w-full py-2 text-center border border-red-500 rounded-md text-red-700">
             {error}

@@ -13,15 +13,13 @@ import Appointment_Admin from './pages/Appointment_Admin';
 import User_Admin from './pages/User_Admin';
 import Appointment_Patient from './pages/Appointment_Patient';
 
-
-
 const App = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate(); // Access the navigation function
 
   const fetchUserDetails = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/medicare/user/current-user', {
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/user/current-user`, {
         withCredentials: true,
       });
       if (response.data) {
